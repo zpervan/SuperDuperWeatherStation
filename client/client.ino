@@ -4,8 +4,9 @@
 #include <ESP8266HTTPClient.h>
 
 /* Environment variables */
-const char* SSID = "WifiNetworkName";
-const char* PASSWORD = "WifiNetowrkPassword";
+const char* SSID = "YourWifiNetworkName";
+const char* PASSWORD = "YourWifiNetworkPassword";
+const char* PING_URL = "YourPingUrlEndpoint";
  
 /* Global variables */
 ESP8266WiFiMulti wifi_multi;
@@ -28,7 +29,7 @@ void setup()
   for(uint8_t i = 0; i < 4; i++)
   {
     Serial.println(".");
-    delay(1000);
+    delay(500);
   }
 
   // Set the WiFi mode to "Station mode"
@@ -51,14 +52,35 @@ void setup()
 
 void loop() 
 {
+  // The while is used just for the "continue" statements so we can skip code execution
+  while(true)
+  {
+    delay(5000);
+
+    // Check if the WiFi connection is still alive
     if(wl_status_t status = wifi_multi.run(); status != WL_CONNECTED)
     {
       Serial.printf("Error while using WiFi. Status code: %d\n", status);
-    }
-    else 
-    {
-      Serial.println("Do some work");
+      Serial.flush();
+      continue;
     }
 
-    delay(4000);
+    if(!http.begin(client, PING_URL))
+    {
+      Serial.println("Endpoint not reachable");
+      continue;
+    }
+
+    if(int http_status_code = http.GET(); http_status_code != HTTP_CODE_OK)
+    {
+      Serial.printf("GET request failed. Error: %s", http.errorToString(http_status_code).c_str());
+      Serial.flush();
+    }
+    else
+    {
+      Serial.println(http.getString());
+    }
+
+    http.end();
+  }
 }
