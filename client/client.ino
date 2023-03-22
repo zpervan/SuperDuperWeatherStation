@@ -14,6 +14,7 @@ WiFiClient client;
 HTTPClient http;
 uint8_t led_status = LOW; 
 
+/* Bootstrap */
 void setup()
 {
   // Built-In LED 1 indicator
@@ -50,6 +51,7 @@ void setup()
   digitalWrite(LED_BUILTIN, LOW);
 }
 
+/* Main loop */
 void loop() 
 {
   // The while is used just for the "continue" statements so we can skip code execution

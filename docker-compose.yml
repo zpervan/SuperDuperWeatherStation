@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+    server:
+        build:
+            context: .
+            dockerfile: Server.Dockerfile
+        container_name: sdws_server
+        ports:
+            - "3500:3500"
+        env_file: .env
+        restart: always
+        depends_on:
+            - database
+        networks:
+            - network
+
+    database:
+        image: mongo
+        container_name: sdws_database
+        restart: always
+        ports:
+            - "27018:27017"
+        env_file: .env
+        volumes:
+            - database_data:/data/db
+            - ./server/database/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+        networks:
+            - network
+
+volumes:
+    database_data:
+
+networks:
+    network:
+        ipam:
+            driver: default
+            config:
+                - subnet: "192.168.42.0/24"
