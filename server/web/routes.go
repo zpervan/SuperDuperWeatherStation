@@ -25,6 +25,9 @@ func (r *Routes) HandleRequests() *mux.Router {
 
 	// GET
 	router.Path("/ping").Methods(http.MethodGet).HandlerFunc(r.Handlers.Ping)
+
+	// POST
+	router.Path("/add").Methods(http.MethodPost).HandlerFunc(r.Handlers.AddWeatherData)
 	
 	return router
 }
