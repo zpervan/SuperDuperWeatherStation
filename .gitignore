@@ -7,6 +7,7 @@ go.sum
 *.dylib
 *.out
 *.test
+/server/server.log
 
 # Folders
 .idea
