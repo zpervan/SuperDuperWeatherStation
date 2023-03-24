@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
@@ -12,6 +13,9 @@ import (
 
 // Local environment variables
 const databaseName = "sdws"
+
+// Filter criteria
+var noFilterCriteria = bson.M{}
 
 // WeatherData Contains all necessary data in order to retrieve or store weather data
 type WeatherData struct {
@@ -60,12 +64,12 @@ func (db *Database) Connect(dbUrl string) error {
 
 	db.WeatherData = client.Database(database).Collection("weather_data")
 
-	db.app.Log.Info("Database connection established")
+	db.app.Log.Info("database connection established")
 
 	return nil
 }
 
-func (db *Database) Create(ctx context.Context, weatherData *WeatherData) error {
+func (db *Database) Create(weatherData *WeatherData) error {
 	_, err := db.WeatherData.InsertOne(context.TODO(), weatherData)
 	if err != nil {
 		return err
@@ -74,4 +78,31 @@ func (db *Database) Create(ctx context.Context, weatherData *WeatherData) error 
 	db.app.Log.Info(fmt.Sprintf("creating new entry - temperature %s, humidity %s", weatherData.Temperature, weatherData.Humidity))
 
 	return nil
+}
+
+func (db *Database) Get() ([]WeatherData, error) {
+	cursor, err := db.WeatherData.Find(context.TODO(), noFilterCriteria)
+
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve all weather data. reason: %s", err)
+	}
+
+	var queryResults []WeatherData
+
+	for cursor.Next(context.TODO()) {
+		singleResult := WeatherData{}
+
+		err := cursor.Decode(&singleResult)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve weather data. reason: %s", err)
+		}
+
+		queryResults = append(queryResults, singleResult)
+	}
+
+	if len(queryResults) == 0 {
+		db.app.Log.Warn("no tasks available")
+	}
+
+	return queryResults, nil
 }

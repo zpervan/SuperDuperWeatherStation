@@ -38,7 +38,7 @@ func NewHandler(app *core.Application) *Handler {
 	return handlers
 }
 
-func (h *Handler) Ping(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) Ping(w http.ResponseWriter, _ *http.Request) {
 	h.App.Log.Info("ping request")
 
 	err := json.NewEncoder(w).Encode("Test string")
@@ -47,21 +47,36 @@ func (h *Handler) Ping(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (h *Handler) AddWeatherData(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) Add(w http.ResponseWriter, req *http.Request) {
 	h.App.Log.Info("adding new weather data")
 
 	var weatherData database.WeatherData
 
 	err := json.NewDecoder(req.Body).Decode(&weatherData)
 	if err != nil {
-		h.App.Log.Warn("error while adding new weather data. reason: " + err.Error())
+		h.App.Log.Error("error while adding new weather data. reason: " + err.Error())
+		return
 	}
 
-	context := req.Context()
-
-	err = h.Database.Create(context, &weatherData)
+	err = h.Database.Create(&weatherData)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Header().Set("X-Status-Reason", "error while adding new weather data")
+	}
+}
+
+func (h *Handler) Get(w http.ResponseWriter, _ *http.Request) {
+	h.App.Log.Info("getting weather data")
+
+	weatherData, err := h.Database.Get()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("X-Status-Reason", "error while getting weather data")
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(weatherData)
+	if err != nil {
+		h.App.Log.Error("error while encoding fetched data. reason: " + err.Error())
 	}
 }
