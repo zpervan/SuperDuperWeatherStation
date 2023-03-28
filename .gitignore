@@ -1,5 +1,6 @@
 # Files
 go.sum
+cargo.lock
 *.exe
 *.exe~
 *.dll
@@ -10,4 +11,5 @@ go.sum
 /server/server.log
 
 # Folders
-.idea
+**/.idea
+**/target

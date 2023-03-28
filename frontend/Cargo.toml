@@ -1,0 +1,13 @@
+[package]
+name = "sdwd_frontend"
+version = "0.1.0"
+edition = "2021"
+authors = ["Zvonimir Pervan <z.pervan65@gmail.com>"]
+
+[dependencies]
+spdlog-rs = "0.3"
+druid = "0.8"
+plotters-druid = "0.3.0"
+plotters = "^0.3"
+reqwest = { version = "0.11", features = ["blocking"] }
+tokio = { version = "^1.27", features = ["full"]}
