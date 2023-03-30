@@ -1,8 +1,7 @@
 package web
 
 import (
-	"github.com/gorilla/mux"
-	"net/http"
+	"github.com/go-chi/chi/v5"
 	"server/core"
 )
 
@@ -20,15 +19,15 @@ func NewRouter(app *core.Application) *Routes {
 	return routes
 }
 
-func (r *Routes) HandleRequests() *mux.Router {
-	router := mux.NewRouter()
+func (r *Routes) HandleRequests() *chi.Mux {
+	router := chi.NewRouter()
 
-	// GET
-	router.Path("/ping").Methods(http.MethodGet).HandlerFunc(r.Handlers.Ping)
-	router.Path("/get").Methods(http.MethodGet).HandlerFunc(r.Handlers.Get)
+	//GET
+	router.Get("/ping", r.Handlers.Ping)
+	router.Get("/get", r.Handlers.Get)
 
 	// POST
-	router.Path("/add").Methods(http.MethodPost).HandlerFunc(r.Handlers.Add)
+	router.Post("/add", r.Handlers.Add)
 
 	return router
 }
