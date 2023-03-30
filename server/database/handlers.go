@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
@@ -19,8 +20,9 @@ var noFilterCriteria = bson.M{}
 
 // WeatherData Contains all necessary data in order to retrieve or store weather data
 type WeatherData struct {
-	Temperature string `json:"temperature" bson:"temperature"`
-	Humidity    string `json:"humidity" bson:"humidity"`
+	Datetime    primitive.DateTime `json:"datetime" bson:"datetime"`
+	Temperature string             `json:"temperature" bson:"temperature"`
+	Humidity    string             `json:"humidity" bson:"humidity"`
 }
 
 // Database Contains all needed functionality and dependencies in order to execute database CRUD operations
@@ -70,6 +72,10 @@ func (db *Database) Connect(dbUrl string) error {
 }
 
 func (db *Database) Create(weatherData *WeatherData) error {
+	// Ideally, this would be provided in the request data from the ESP01, but this can be accomplished only with addition
+	// hardware modules - let's keep it simple and use the servers date-time functionality.
+	weatherData.Datetime = primitive.NewDateTimeFromTime(time.Now())
+
 	_, err := db.WeatherData.InsertOne(context.TODO(), weatherData)
 	if err != nil {
 		return err

@@ -41,7 +41,7 @@ func NewHandler(app *core.Application) *Handler {
 func (h *Handler) Ping(w http.ResponseWriter, _ *http.Request) {
 	h.App.Log.Info("ping request")
 
-	err := json.NewEncoder(w).Encode("Test string")
+	err := json.NewEncoder(w).Encode("OK")
 	if err != nil {
 		h.App.Log.Warn("error while pinging. reason: " + err.Error())
 	}
