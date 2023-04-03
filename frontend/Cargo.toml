@@ -6,8 +6,10 @@ authors = ["Zvonimir Pervan <z.pervan65@gmail.com>"]
 
 [dependencies]
 spdlog-rs = "0.3"
-druid = "0.8"
+lens-rs = "0.3"
+druid = { version = "0.8", features = ["im"] }
 plotters-druid = "0.3.0"
 plotters = "^0.3"
 reqwest = { version = "0.11", features = ["blocking"] }
-tokio = { version = "^1.27", features = ["full"]}
+tokio = { version = "^1.27", features = ["full"] }
+serde_json = "^1.0"

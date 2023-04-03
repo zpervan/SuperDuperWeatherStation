@@ -1,21 +1,36 @@
-use std::vec;
 use druid::{widget::{Flex, Label, Button}, AppLauncher, Data, Lens, Widget, WidgetExt, WindowDesc};
+use druid::im::Vector;
 use plotters::prelude::*;
 use plotters_druid::Plot;
 use reqwest::Error;
+use serde_json::Value;
 
-#[derive(Clone, Data, Lens)]
-struct AppState {}
+#[derive(Clone, Data, Default, Lens)]
+struct AppData
+{
+    datetime: Vector<String>,
+    temperature: Vector<f32>,
+    humidity: Vector<f32>,
+}
 
-/* Network functionalities */
 async fn get_weather_data() -> Result<String, Error>
 {
     let weather_data = reqwest::get("http://localhost:3500/get").await?.text().await?;
+    let json: Value = serde_json::from_str(weather_data.as_str()).unwrap();
+    let array = json.as_array().unwrap();
+
+    for object in array
+    {
+        println!("Datetime: {}", object["datetime"].as_str().unwrap());
+        println!("Temperature: {}", object["temperature"].as_str().unwrap());
+        println!("Humidity: {}", object["humidity"].as_str().unwrap());
+    }
+
     Ok(weather_data)
 }
 
 /* GUI components */
-fn build_plot_widget() -> impl Widget<AppState>
+fn build_plot_widget() -> impl Widget<AppData>
 {
     Plot::new(|_, _, root| {
         let font = FontDesc::new(FontFamily::SansSerif, 16., FontStyle::Normal);
@@ -56,7 +71,7 @@ fn build_plot_widget() -> impl Widget<AppState>
     })
 }
 
-fn build_refresh_button() -> impl Widget<AppState>
+fn build_refresh_button() -> impl Widget<AppData>
 {
     Flex::column()
         .with_child(Button::new("Refresh").padding(5.0).on_click(|_, _, _| {
@@ -70,7 +85,7 @@ fn build_refresh_button() -> impl Widget<AppState>
         }))
 }
 
-fn build_application() -> impl Widget<AppState>
+fn build_application() -> impl Widget<AppData>
 {
     Flex::column()
         .with_child(Label::new("Weather data"))
@@ -92,6 +107,6 @@ async fn main()
 
     AppLauncher::with_window(main_window)
         .log_to_console()
-        .launch(AppState {})
+        .launch(AppData::default())
         .expect("Failed to launch application");
 }
