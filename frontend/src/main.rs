@@ -1,31 +1,68 @@
+use std::thread;
+use std::sync::{Arc, Mutex};
+
 use druid::{widget::{Flex, Label, Button}, AppLauncher, Data, Lens, Widget, WidgetExt, WindowDesc};
-use druid::im::Vector;
 use plotters::prelude::*;
 use plotters_druid::Plot;
-use reqwest::Error;
+
+use reqwest::{blocking::get, Error};
 use serde_json::Value;
 
 #[derive(Clone, Data, Default, Lens)]
 struct AppData
 {
-    datetime: Vector<String>,
-    temperature: Vector<f32>,
-    humidity: Vector<f32>,
+    datetime: Arc<Mutex<Vec<String>>>,
+    temperature: Arc<Mutex<Vec<f64>>>,
+    humidity: Arc<Mutex<Vec<f64>>>,
 }
 
-async fn get_weather_data() -> Result<String, Error>
-{
-    let weather_data = reqwest::get("http://localhost:3500/get").await?.text().await?;
-    let json: Value = serde_json::from_str(weather_data.as_str()).unwrap();
-    let array = json.as_array().unwrap();
-
-    for object in array
+impl AppData {
+    fn new() -> Self
     {
-        println!("Datetime: {}", object["datetime"].as_str().unwrap());
-        println!("Temperature: {}", object["temperature"].as_str().unwrap());
-        println!("Humidity: {}", object["humidity"].as_str().unwrap());
+        AppData
+        {
+            datetime: Arc::new(Mutex::new(vec![])),
+            temperature: Arc::new(Mutex::new(vec![])),
+            humidity: Arc::new(Mutex::new(vec![])),
+        }
     }
 
+    fn populate_data(&mut self)
+    {
+        let datetime_data_ref = Arc::clone(&self.datetime);
+        let temperature_data_ref = Arc::clone(&self.temperature);
+        let humidity_data_ref = Arc::clone(&self.humidity);
+
+        thread::spawn(move || {
+            let parsed_weather_data: Value = serde_json::from_str(get_weather_data().unwrap().as_str()).unwrap();
+
+            println!("Received weather data: {}", parsed_weather_data);
+
+            let array = parsed_weather_data.as_array().unwrap();
+
+            let mut datetime_data = datetime_data_ref.lock().unwrap();
+            let mut temperature_data = temperature_data_ref.lock().unwrap();
+            let mut humidity_data = humidity_data_ref.lock().unwrap();
+
+            datetime_data.clear();
+            temperature_data.clear();
+            humidity_data.clear();
+
+            for object in array
+            {
+                datetime_data.push(object["datetime"].to_string());
+                temperature_data.push(object["temperature"].as_f64().unwrap());
+                humidity_data.push(object["humidity"].as_f64().unwrap());
+            }
+
+            println!("Finished populating weather data");
+        });
+    }
+}
+
+fn get_weather_data() -> Result<String, Error>
+{
+    let weather_data = get("http://localhost:3500/get")?.text()?;
     Ok(weather_data)
 }
 
@@ -74,15 +111,12 @@ fn build_plot_widget() -> impl Widget<AppData>
 fn build_refresh_button() -> impl Widget<AppData>
 {
     Flex::column()
-        .with_child(Button::new("Refresh").padding(5.0).on_click(|_, _, _| {
-            tokio::spawn(async move {
-                match get_weather_data().await {
-                    Ok(data) => println!("{}", data),
-                    Err(e) => println!("Error: {}", e)
-                }
-            }
-            );
-        }))
+        .with_child(
+            Button::new("Refresh")
+                .padding(5.0)
+                .on_click(|_, data: &mut AppData, _| {
+                    data.populate_data();
+                }))
 }
 
 fn build_application() -> impl Widget<AppData>
@@ -96,8 +130,7 @@ fn build_application() -> impl Widget<AppData>
         .padding(10.0)
 }
 
-#[tokio::main]
-async fn main()
+fn main()
 {
     println!("starting frontend application");
 
@@ -107,6 +140,6 @@ async fn main()
 
     AppLauncher::with_window(main_window)
         .log_to_console()
-        .launch(AppData::default())
+        .launch(AppData::new())
         .expect("Failed to launch application");
 }
