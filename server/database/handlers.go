@@ -21,8 +21,8 @@ var noFilterCriteria = bson.M{}
 // WeatherData Contains all necessary data in order to retrieve or store weather data
 type WeatherData struct {
 	Datetime    primitive.DateTime `json:"datetime" bson:"datetime"`
-	Temperature string             `json:"temperature" bson:"temperature"`
-	Humidity    string             `json:"humidity" bson:"humidity"`
+	Temperature float64            `json:"temperature" bson:"temperature"`
+	Humidity    float64            `json:"humidity" bson:"humidity"`
 }
 
 // Database Contains all needed functionality and dependencies in order to execute database CRUD operations
