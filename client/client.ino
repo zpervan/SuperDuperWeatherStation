@@ -115,7 +115,7 @@ void loop()
   {
     Serial.println("Endpoint not reachable");
 
-    ErrorBlink(500);
+    ErrorBlink(500); 
     
     return;
   }
