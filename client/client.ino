@@ -40,12 +40,6 @@ void setup()
   delay(2000);
 
   Serial.println("Initializing");
-  
-  for(uint8_t i = 0; i < 4; i++)
-  {
-    Serial.println(".");
-    delay(500);
-  }
 
   /* WiFi connection setup */
 
