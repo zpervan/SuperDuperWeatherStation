@@ -114,6 +114,9 @@ void loop()
   if(!http.begin(client, ADD_URL))
   {
     Serial.println("Endpoint not reachable");
+
+    ErrorBlink(500);
+    
     return;
   }
 
@@ -123,6 +126,8 @@ void loop()
   {
     Serial.printf("GET request failed. Error: %s", http.errorToString(http_status_code).c_str());
     Serial.flush();
+
+    ErrorBlink(500);
   }
   else
   {
