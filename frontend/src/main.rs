@@ -1,6 +1,7 @@
 mod core;
 mod datetime;
 mod gui;
+mod util;
 
 use druid::{ AppLauncher, WindowDesc};
 use crate::core::{ApplicationData, Delegate};

@@ -1,8 +1,10 @@
 use crate::core::ApplicationData;
+use crate::util;
 use druid::{Widget, WidgetExt};
 use druid::widget::{Flex, Label, Button};
 use plotters::prelude::*;
 use plotters_druid::Plot;
+use crate::util::convert_to_duration;
 
 pub fn build_gui() -> impl Widget<ApplicationData>
 {
@@ -15,31 +17,43 @@ pub fn build_gui() -> impl Widget<ApplicationData>
         .padding(10.0)
 }
 
+// @TODO: Add humidity plot
 fn build_plot_widget() -> impl Widget<ApplicationData>
 {
     Plot::new(|_, data: &ApplicationData, root| {
+        if data.temperature.is_empty()
+        {
+            return;
+        }
+
+        let (min_temperature, max_temperature) = util::find_extremes(&data.temperature);
+        let time_from = data.temperature.head().unwrap().0.0;
+        let time_to = data.temperature.back().unwrap().0.0;
+
         let mut chart = ChartBuilder::on(&root)
-            .x_label_area_size(30)
-            .y_label_area_size(30)
-            .margin_right(10)
-            .margin_left(10)
+            .x_label_area_size(50)
+            .y_label_area_size(70)
+            .margin_right(30)
+            .margin_left(30)
             .margin_top(20)
-            .build_cartesian_2d(0.0..data.temperature.len() as f32, 18.0f32..26.0f32)
+            .build_cartesian_2d(time_from..time_to, min_temperature..max_temperature)
             .unwrap();
 
-        let font = FontDesc::new(FontFamily::SansSerif, 16., FontStyle::Normal);
+        let font = FontDesc::new(FontFamily::SansSerif, 18., FontStyle::Normal);
 
         chart
             .configure_mesh()
+            .x_desc("Datetime [hh:mm]")
+            .y_desc("Temperature [°C]")
             .axis_style(&RGBColor(28, 28, 28))
             .x_label_style(font.clone().with_color(&WHITE))
             .y_label_style(font.clone().with_color(&WHITE))
-            // .x_label_formatter(&|y| format!("{:02}:{:02}", y.num_minutes(), y.num_seconds() % 60))
+            .x_label_formatter(&|y| format!("{:02}:{:02}", y.num_hours(), y.num_minutes() % 60))
             .draw()
             .unwrap();
 
         chart
-            .draw_series(LineSeries::new(data.temperature.clone(), &RED))
+            .draw_series(LineSeries::new(convert_to_duration(&data.temperature), &RED))
             .unwrap()
             .label("Temperature")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));

@@ -1,4 +1,5 @@
 use std::thread;
+use chrono::Duration;
 use druid::{AppDelegate, Command, Data, DelegateCtx, Env, ExtEventSink, Lens, Handled, Selector, Target};
 use druid::im::Vector;
 use reqwest::blocking::get;
@@ -7,12 +8,23 @@ use crate::datetime;
 
 const PROCESSING_FINISHED: Selector<ApplicationData> = Selector::new("processing_finished");
 
+#[derive(Clone)]
+pub struct DurationWrapper(pub Duration);
+
+impl Data for DurationWrapper
+{
+    fn same(&self, other: &Self) -> bool
+    {
+        self.0.eq(&other.0)
+    }
+}
+
 #[derive(Clone, Data, Lens)]
 pub struct ApplicationData
 {
     pub processing: bool,
-    pub temperature: Vector<(f32, f32)>,
-    pub humidity: Vector<(f32, f32)>,
+    pub temperature: Vector<(DurationWrapper, f32)>,
+    pub humidity: Vector<(DurationWrapper, f32)>,
 }
 
 impl ApplicationData
@@ -30,23 +42,18 @@ impl ApplicationData
     pub fn populate_data(&mut self, sink: ExtEventSink)
     {
         thread::spawn(move || {
-            let parsed_data : Value = serde_json::from_str(get("http://localhost:3500/get").unwrap().text().unwrap().as_str()).unwrap();
-
-            println!("Received weather data: {}", parsed_data);
+            println!("Populating weather data for plotting");
+            let parsed_data: Value = serde_json::from_str(get("http://localhost:3500/get").unwrap().text().unwrap().as_str()).unwrap();
 
             let mut app_data = ApplicationData::new();
             app_data.processing = true;
-            let mut index = 0.0;
 
             for value in parsed_data.as_array().unwrap()
             {
-                // @TODO: Integrate datetime into plot
                 let time = datetime::parse_time(&value["datetime"].to_string().replace("\"", ""));
-                println!("{:2}:{:2}", time.num_hours(), time.num_minutes() % 60);
 
-                app_data.temperature.push_back((index, value["temperature"].as_f64().unwrap() as f32));
-                app_data.humidity.push_back((index, value["humidity"].as_f64().unwrap() as f32));
-                index += 1.0;
+                app_data.temperature.push_back((DurationWrapper(time), value["temperature"].as_f64().unwrap() as f32));
+                app_data.humidity.push_back((DurationWrapper(time), value["humidity"].as_f64().unwrap() as f32));
             }
 
             sink.submit_command(PROCESSING_FINISHED, app_data, Target::Auto).expect("Failed to submit command");
