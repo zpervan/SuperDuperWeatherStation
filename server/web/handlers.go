@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"os"
 	"server/core"
@@ -65,10 +66,10 @@ func (h *Handler) Add(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (h *Handler) Get(w http.ResponseWriter, _ *http.Request) {
+func (h *Handler) GetAllWeatherData(w http.ResponseWriter, _ *http.Request) {
 	h.App.Log.Info("getting weather data")
 
-	weatherData, err := h.Database.Get()
+	weatherData, err := h.Database.GetAllWeatherData()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Header().Set("X-Status-Reason", "error while getting weather data")
@@ -78,5 +79,41 @@ func (h *Handler) Get(w http.ResponseWriter, _ *http.Request) {
 	err = json.NewEncoder(w).Encode(weatherData)
 	if err != nil {
 		h.App.Log.Error("error while encoding fetched data. reason: " + err.Error())
+	}
+}
+
+func (h *Handler) GetByDate(w http.ResponseWriter, req *http.Request) {
+	date := chi.URLParam(req, "date")
+
+	h.App.Log.Info("getting weather data by date " + date)
+
+	weatherData, err := h.Database.GetByDate(&date)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("X-Status-Reason", "error while getting weather data by date")
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(weatherData)
+	if err != nil {
+		h.App.Log.Error("error while encoding fetched data by date. reason: " + err.Error())
+	}
+}
+
+func (h *Handler) GetDates(w http.ResponseWriter, _ *http.Request) {
+	h.App.Log.Info("getting dates")
+
+	dates, err := h.Database.GetDates()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("X-Status-Reason", "error while getting weather data by date")
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(dates)
+	if err != nil {
+		h.App.Log.Error("error while encoding fetched data by date. reason: " + err.Error())
 	}
 }

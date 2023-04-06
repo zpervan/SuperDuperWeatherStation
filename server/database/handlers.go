@@ -14,13 +14,14 @@ import (
 
 // Local environment variables
 const databaseName = "sdws"
+const dateFormatLayout = "20060102"
 
 // Filter criteria
 var noFilterCriteria = bson.M{}
 
 // WeatherData Contains all necessary data in order to retrieve or store weather data
 type WeatherData struct {
-	Datetime    primitive.DateTime `json:"datetime" bson:"datetime"`
+	CreatedOn   primitive.DateTime `json:"created_on" bson:"created_on"`
 	Temperature float64            `json:"temperature" bson:"temperature"`
 	Humidity    float64            `json:"humidity" bson:"humidity"`
 }
@@ -73,8 +74,8 @@ func (db *Database) Connect(dbUrl string) error {
 
 func (db *Database) Create(weatherData *WeatherData) error {
 	// Ideally, this would be provided in the request data from the ESP01, but this can be accomplished only with addition
-	// hardware modules - let's keep it simple and use the servers date-time functionality.
-	weatherData.Datetime = primitive.NewDateTimeFromTime(time.Now())
+	// hardware modules - let's keep it simple and use the server's date-time functionality.
+	weatherData.CreatedOn = primitive.NewDateTimeFromTime(time.Now())
 
 	_, err := db.WeatherData.InsertOne(context.TODO(), weatherData)
 	if err != nil {
@@ -86,14 +87,19 @@ func (db *Database) Create(weatherData *WeatherData) error {
 	return nil
 }
 
-func (db *Database) Get() ([]WeatherData, error) {
+func (db *Database) GetAllWeatherData() (queryResult []WeatherData, err error) {
+	defer func() {
+		if err != nil {
+			db.app.Log.Error(fmt.Sprintf("could not fetch all weather data. reason: %s", err))
+		}
+	}()
+
+	// Retrieved ALL the data located inside the database
 	cursor, err := db.WeatherData.Find(context.TODO(), noFilterCriteria)
 
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve all weather data. reason: %s", err)
 	}
-
-	var queryResults []WeatherData
 
 	for cursor.Next(context.TODO()) {
 		singleResult := WeatherData{}
@@ -103,12 +109,81 @@ func (db *Database) Get() ([]WeatherData, error) {
 			return nil, fmt.Errorf("could not retrieve weather data. reason: %s", err)
 		}
 
-		queryResults = append(queryResults, singleResult)
+		queryResult = append(queryResult, singleResult)
 	}
 
-	if len(queryResults) == 0 {
-		db.app.Log.Warn("no tasks available")
+	if len(queryResult) == 0 {
+		db.app.Log.Warn("no weather data available")
 	}
 
-	return queryResults, nil
+	return queryResult, nil
+}
+
+func (db *Database) GetByDate(date *string) (queryResult []WeatherData, err error) {
+	defer func() {
+		if err != nil {
+			db.app.Log.Error(fmt.Sprintf("could not fetch data by date %s. reason: %s", date, err))
+		}
+	}()
+
+	parsedDate, err := time.Parse(dateFormatLayout, *date)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a date filter based on the received date string
+	dateFilter := bson.M{"created_on": bson.M{
+		"$gte": primitive.NewDateTimeFromTime(parsedDate),
+	}}
+
+	cursor, err := db.WeatherData.Find(context.TODO(), dateFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cursor.Next(context.TODO()) {
+		singleResult := WeatherData{}
+
+		err := cursor.Decode(&singleResult)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve weather data by date. reason: %s", err)
+		}
+
+		queryResult = append(queryResult, singleResult)
+	}
+
+	if len(queryResult) == 0 {
+		db.app.Log.Warn("no weather data with that date available")
+	}
+
+	return queryResult, nil
+}
+
+func (db *Database) GetDates() (_ []string, err error) {
+	defer func() {
+		if err != nil {
+			db.app.Log.Error(fmt.Sprintf("could not dates. reason: %s", err))
+		}
+	}()
+
+	cursor, err := db.WeatherData.Distinct(context.TODO(), "created_on", noFilterCriteria)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve dates. reason: %s", err)
+	}
+
+	queryResult := core.Set{}
+
+	// Iterate through the created_at data column, convert the datetime field to a date and add unique dates to the result
+	for _, date := range cursor {
+		year, month, day := date.(primitive.DateTime).Time().Date()
+		queryResult.Add(fmt.Sprintf("%d%02d%02d", year, int(month), day))
+	}
+
+	if len(queryResult) == 0 {
+		db.app.Log.Warn("no dates available")
+	}
+
+	// Returning a slice so that the JSON encoder returns a list with elements, otherwise it would return a list with objects.
+	// This makes the JSON encoded response cleaner and simpler.
+	return queryResult.ToSlice(), nil
 }
