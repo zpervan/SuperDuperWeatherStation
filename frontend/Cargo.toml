@@ -8,6 +8,7 @@ authors = ["Zvonimir Pervan <z.pervan65@gmail.com>"]
 spdlog-rs = "0.3"
 lens-rs = "0.3"
 druid = { version = "0.8", features = ["im"] }
+druid-widget-nursery = { git = "https://github.com/linebender/druid-widget-nursery" }
 plotters-druid = "0.3.0"
 plotters = "^0.3"
 reqwest = { version = "0.11", features = ["blocking"] }

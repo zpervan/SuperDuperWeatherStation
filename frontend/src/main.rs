@@ -3,7 +3,7 @@ mod datetime;
 mod gui;
 mod util;
 
-use druid::{ AppLauncher, WindowDesc};
+use druid::{AppLauncher, WindowDesc};
 use crate::core::{ApplicationData, Delegate};
 
 fn main()
@@ -14,11 +14,9 @@ fn main()
         .title("Super-Duper Weather Visualization")
         .window_size((1200.0, 600.0));
 
-    let app_data = ApplicationData::new();
-
     AppLauncher::with_window(main_window)
         .log_to_console()
-        .delegate(Delegate{})
-        .launch(app_data)
+        .delegate(Delegate {})
+        .launch(ApplicationData::new())
         .expect("Failed to launch application");
 }

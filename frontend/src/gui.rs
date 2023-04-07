@@ -1,24 +1,34 @@
 use crate::core::ApplicationData;
 use crate::util;
-use druid::{Widget, WidgetExt};
+use druid::{FontDescriptor, LensExt, Widget, WidgetExt};
 use druid::widget::{Flex, Label, Button};
+use druid_widget_nursery::DropdownSelect;
 use plotters::prelude::*;
 use plotters::prelude::full_palette::{GREY, LIGHTBLUE_400, RED_400};
 use plotters_druid::Plot;
+
+const MARGIN: i32 = 30;
+const SPACE: f64 = 5.0;
 
 pub fn build_gui() -> impl Widget<ApplicationData>
 {
     Flex::column()
         .with_child(Label::new("Weather data"))
-        .with_spacer(5.0)
+        .with_spacer(SPACE)
         .with_flex_child(
             Flex::row()
-                .with_flex_child(build_temperature_plot_widget(), 1.)
-                .with_spacer(5.0)
-                .with_flex_child(build_humidity_plot_widget(), 1.), 1.)
-        .with_spacer(5.0)
-        .with_child(build_refresh_button())
-        .padding(10.0)
+                .with_flex_child(build_temperature_plot_widget(), 1.0)
+                .with_spacer(SPACE)
+                .with_flex_child(build_humidity_plot_widget(), 1.0), 1.0,
+        )
+        .with_spacer(SPACE)
+        .with_child(
+            Flex::row()
+                .with_child(build_refresh_button())
+                .with_spacer(SPACE)
+                .with_child(build_date_dropdown())
+        )
+        .with_spacer(SPACE)
 }
 
 // @TODO: Try to generalize the plot builders so we have a single one
@@ -37,13 +47,11 @@ fn build_temperature_plot_widget() -> impl Widget<ApplicationData>
         let mut chart = ChartBuilder::on(&root)
             .x_label_area_size(50)
             .y_label_area_size(70)
-            .margin_right(30)
-            .margin_left(30)
-            .margin_top(20)
+            .margin(MARGIN)
             .build_cartesian_2d(time_from..time_to, min_temperature..max_temperature)
             .unwrap();
 
-        let font = FontDesc::new(FontFamily::SansSerif, 18., FontStyle::Normal);
+        let font = FontDesc::new(plotters::prelude::FontFamily::SansSerif, 18., FontStyle::Normal);
 
         chart
             .configure_mesh()
@@ -81,13 +89,11 @@ fn build_humidity_plot_widget() -> impl Widget<ApplicationData>
         let mut chart = ChartBuilder::on(&root)
             .x_label_area_size(50)
             .y_label_area_size(70)
-            .margin_right(30)
-            .margin_left(30)
-            .margin_top(20)
+            .margin(MARGIN)
             .build_cartesian_2d(time_from..time_to, min_humidity..max_humidity)
             .unwrap();
 
-        let font = FontDesc::new(FontFamily::SansSerif, 18., FontStyle::Normal);
+        let font = FontDesc::new(plotters::prelude::FontFamily::SansSerif, 18., FontStyle::Normal);
 
         chart
             .configure_mesh()
@@ -110,11 +116,23 @@ fn build_humidity_plot_widget() -> impl Widget<ApplicationData>
 
 fn build_refresh_button() -> impl Widget<ApplicationData>
 {
-    Flex::column()
-        .with_child(
-            Button::new("Refresh")
-                .on_click(|ctx, data: &mut ApplicationData, _| {
-                    data.populate_data(ctx.get_external_handle());
-                }))
+    let font = FontDescriptor::new(druid::FontFamily::SANS_SERIF).with_size(40.0);
+    Button::from_label(Label::new("⭯").with_font(font))
+        .on_click(|ctx, data: &mut ApplicationData, _| {
+            data.populate_weather_data(ctx.get_external_handle());
+        })
+}
+
+fn build_date_dropdown() -> impl Widget<ApplicationData>
+{
+    // @TODO: Populate data actual server data
+    DropdownSelect::new(vec![
+        ("01.01.2000", "01012000".to_string()),
+        ("01.02.2000", "01022000".to_string()),
+        ("01.03.2000", "01032000".to_string()),
+        ("01.04.2000", "01042000".to_string()),
+    ])
+        .align_right()
+        .lens(ApplicationData::current_date)
 }
 
