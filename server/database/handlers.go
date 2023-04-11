@@ -165,7 +165,7 @@ func (db *Database) GetByDate(date *string) (queryResult []WeatherData, err erro
 func (db *Database) GetDates() (_ []string, err error) {
 	defer func() {
 		if err != nil {
-			db.app.Log.Error(fmt.Sprintf("could not dates. reason: %s", err))
+			db.app.Log.Error(fmt.Sprintf("could not get dates. reason: %s", err))
 		}
 	}()
 
@@ -189,4 +189,33 @@ func (db *Database) GetDates() (_ []string, err error) {
 	// Returning a slice so that the JSON encoder returns a list with elements, otherwise it would return a list with objects.
 	// This makes the JSON encoded response cleaner and simpler.
 	return queryResult.ToSlice(), nil
+}
+
+func (db *Database) GetLatestDate() (_ string, err error) {
+	defer func() {
+		if err != nil {
+			db.app.Log.Error(fmt.Sprintf("could not get latest date. reason: %s", err))
+		}
+	}()
+
+	// Sort the result by descending order base on the _id field
+	latestEntryFilter := bson.D{{"_id", -1}}
+	options := options.FindOne().SetSort(latestEntryFilter)
+
+	queryResult := db.WeatherData.FindOne(context.TODO(), bson.M{}, options)
+	err = queryResult.Err()
+	if err != nil {
+		return "", err
+	}
+
+	// Populate the query results into a WeatherData structure
+	var weatherDataResult WeatherData
+	err = queryResult.Decode(&weatherDataResult)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert and format the latest date string
+	year, month, day := weatherDataResult.CreatedOn.Time().Date()
+	return fmt.Sprintf("%d%02d%02d", year, int(month), day), nil
 }

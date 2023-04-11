@@ -117,3 +117,20 @@ func (h *Handler) GetDates(w http.ResponseWriter, _ *http.Request) {
 		h.App.Log.Error("error while encoding fetched data by date. reason: " + err.Error())
 	}
 }
+
+func (h *Handler) GetLatestDate(w http.ResponseWriter, _ *http.Request) {
+	h.App.Log.Info("getting latest date")
+
+	dates, err := h.Database.GetLatestDate()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("X-Status-Reason", "error while getting latest date")
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(dates)
+	if err != nil {
+		h.App.Log.Error("error while encoding latest date. reason: " + err.Error())
+	}
+}

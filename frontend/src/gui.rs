@@ -1,11 +1,12 @@
-use crate::core::ApplicationData;
-use crate::util;
-use druid::{FontDescriptor, LensExt, Widget, WidgetExt};
+use druid::{FontDescriptor, Widget, WidgetExt};
 use druid::widget::{Flex, Label, Button};
 use druid_widget_nursery::DropdownSelect;
 use plotters::prelude::*;
 use plotters::prelude::full_palette::{GREY, LIGHTBLUE_400, RED_400};
 use plotters_druid::Plot;
+
+use crate::core::ApplicationData;
+use crate::{datetime, util, requests};
 
 const MARGIN: i32 = 30;
 const SPACE: f64 = 5.0;
@@ -31,7 +32,7 @@ pub fn build_gui() -> impl Widget<ApplicationData>
         .with_spacer(SPACE)
 }
 
-// @TODO: Try to generalize the plot builders so we have a single one
+// @TODO: Try to generalize the plot builder functions so we have a single one
 fn build_temperature_plot_widget() -> impl Widget<ApplicationData>
 {
     Plot::new(|_, data: &ApplicationData, root| {
@@ -67,7 +68,7 @@ fn build_temperature_plot_widget() -> impl Widget<ApplicationData>
             .unwrap();
 
         chart
-            .draw_series(AreaSeries::new(util::convert_to_duration(&data.temperature), 0.0, &RED_400.mix(0.75)))
+            .draw_series(AreaSeries::new(datetime::convert_to_duration(&data.temperature), 0.0, &RED_400.mix(0.75)))
             .unwrap()
             .label("Temperature")
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED_400));
@@ -109,7 +110,7 @@ fn build_humidity_plot_widget() -> impl Widget<ApplicationData>
             .unwrap();
 
         chart
-            .draw_series(AreaSeries::new(util::convert_to_duration(&data.humidity), 0.0, &LIGHTBLUE_400.mix(0.75)))
+            .draw_series(AreaSeries::new(datetime::convert_to_duration(&data.humidity), 0.0, &LIGHTBLUE_400.mix(0.75)))
             .unwrap();
     })
 }
@@ -119,19 +120,13 @@ fn build_refresh_button() -> impl Widget<ApplicationData>
     let font = FontDescriptor::new(druid::FontFamily::SANS_SERIF).with_size(40.0);
     Button::from_label(Label::new("⭯").with_font(font))
         .on_click(|ctx, data: &mut ApplicationData, _| {
-            data.populate_weather_data(ctx.get_external_handle());
+            requests::get_weather_data(ctx.get_external_handle(), data.current_date.clone());
         })
 }
 
 fn build_date_dropdown() -> impl Widget<ApplicationData>
 {
-    // @TODO: Populate data actual server data
-    DropdownSelect::new(vec![
-        ("01.01.2000", "01012000".to_string()),
-        ("01.02.2000", "01022000".to_string()),
-        ("01.03.2000", "01032000".to_string()),
-        ("01.04.2000", "01042000".to_string()),
-    ])
+    DropdownSelect::new(requests::get_dates())
         .align_right()
         .lens(ApplicationData::current_date)
 }

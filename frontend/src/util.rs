@@ -1,4 +1,3 @@
-use chrono::Duration;
 use druid::im::Vector;
 use crate::core::DurationWrapper;
 
@@ -21,17 +20,4 @@ pub(crate) fn find_extremes(data: &Vector<(DurationWrapper, f32)>) -> (f32, f32)
     }
 
     return (min_value.floor(), max_value.ceil());
-}
-
-pub(crate) fn convert_to_duration(data: &Vector<(DurationWrapper, f32)>) -> Vector<(Duration, f32)>
-{
-    println!("Converting data..");
-    let mut converted_data : Vector<(Duration, f32)> = Vector::new();
-
-    for value in data.iter()
-    {
-        converted_data.push_back((value.0.0, value.1));
-    }
-
-    return converted_data;
 }

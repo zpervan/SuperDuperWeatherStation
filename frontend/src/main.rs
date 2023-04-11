@@ -2,13 +2,14 @@ mod core;
 mod datetime;
 mod gui;
 mod util;
+mod requests;
 
 use druid::{AppLauncher, WindowDesc};
 use crate::core::{ApplicationData, Delegate};
 
 fn main()
 {
-    println!("starting frontend application");
+    println!("Starting visualization application");
 
     let main_window = WindowDesc::new(gui::build_gui())
         .title("Super-Duper Weather Visualization")
