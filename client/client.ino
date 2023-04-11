@@ -26,7 +26,7 @@ String temperature{"nan"};
 String humidity{"nan"};
 
 /* Forward declarations */
-void ErrorBlink(uint8_t delay_time);
+void ErrorBlink();
 
 /* Bootstrap */
 void setup()
@@ -41,12 +41,6 @@ void setup()
 
   Serial.println("Initializing");
   
-  for(uint8_t i = 0; i < 4; i++)
-  {
-    Serial.println(".");
-    delay(500);
-  }
-
   /* WiFi connection setup */
 
   // Set the WiFi mode to "Station mode"
@@ -59,7 +53,7 @@ void setup()
     Serial.printf("Connection failed. Status code: %d\n", status);
     Serial.flush();
 
-    ErrorBlink(500);
+    ErrorBlink();
   }
   else
   {
@@ -73,7 +67,7 @@ void setup()
     Serial.printf("Connection to server failed");
     Serial.flush();
 
-    ErrorBlink(500);
+    ErrorBlink();
   }
 
   if(int http_status_code = http.GET(); http_status_code != HTTP_CODE_OK)
@@ -81,7 +75,7 @@ void setup()
     Serial.printf("PING request failed. Error: %s", http.errorToString(http_status_code).c_str());
     Serial.flush();
 
-    ErrorBlink(500);
+    ErrorBlink();
   }
 
   /* Sensor setup */
@@ -92,35 +86,34 @@ void setup()
 }
 
 /* Main loop */
-
 void loop() 
 {
-  delay(5000);
+  delay(10000);
 
   // Check if the WiFi connection is still alive
   if(wl_status_t status = wifi_multi.run(); status != WL_CONNECTED)
   {
     Serial.printf("Error while using WiFi. Status code: %d\n", status);
     Serial.flush();
-    return;
+    ErrorBlink();
   }
 
   // Read sensor data
   temperature = dht.readTemperature();
   humidity = dht.readHumidity();
 
-  // Example payload: { "temperature":"20.45", "humidity": "54.27" }
-  String sensor_data{"{\"temperature\":\""};
+  // Example payload: { "temperature":20.45,"humidity":54.27" }
+  String sensor_data{"{\"temperature\":"};
   sensor_data.concat(temperature);
-  sensor_data.concat("\",\"humidity\":\"");
+  sensor_data.concat(",\"humidity\":");
   sensor_data.concat(humidity);
-  sensor_data.concat("\"}");
+  sensor_data.concat("}");
 
   // Send data to server
   if(!http.begin(client, ADD_URL))
   {
     Serial.println("Endpoint not reachable");
-    return;
+    ErrorBlink();
   }
 
   http.addHeader("Content-Type", "Content-Type: application/json");
@@ -138,15 +131,14 @@ void loop()
   http.end();
 }
 
-/// @brief Blinks the built-in LED for the given delay time. This allows to immidieately see whether something went wrong.
-/// @param delay_time Pausing time between blinks
-void ErrorBlink(uint8_t delay_time)
+/// @brief Blinks the built-in LED where one half-period lasts for 500ms, and this way allows to immidieately see whether something went wrong.
+void ErrorBlink()
 {
   while(true)
   {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(delay_time);
+    delay(500);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(delay_time);
+    delay(500);
   }
 }
