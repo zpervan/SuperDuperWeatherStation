@@ -122,7 +122,7 @@ func (db *Database) GetAllWeatherData() (queryResult []WeatherData, err error) {
 func (db *Database) GetByDate(date *string) (queryResult []WeatherData, err error) {
 	defer func() {
 		if err != nil {
-			db.app.Log.Error(fmt.Sprintf("could not fetch data by date %s. reason: %s", date, err))
+			db.app.Log.Error(fmt.Sprintf("could not fetch data by date %s. reason: %s", *date, err))
 		}
 	}()
 
@@ -131,11 +131,11 @@ func (db *Database) GetByDate(date *string) (queryResult []WeatherData, err erro
 		return nil, err
 	}
 
-	// A filter criteria which will fetch all data on the parsed date
+	// A filter criteria which will fetch all data on the passed date
 	// We search between the days which are the day before and after the parsed date and obtain all data
 	// If the $eq (equal) operator was used, it would only return one or none entries which has the given time component (i.e., 00:00:00)
 	dateFilter := bson.M{"created_on": bson.M{
-		"$gt": primitive.NewDateTimeFromTime(parsedDate).Time().AddDate(0, 0, -1),
+		"$gt": primitive.NewDateTimeFromTime(parsedDate).Time().AddDate(0, 0, 0),
 		"$lt": primitive.NewDateTimeFromTime(parsedDate).Time().AddDate(0, 0, 1),
 	}}
 
@@ -200,9 +200,9 @@ func (db *Database) GetLatestDate() (_ string, err error) {
 
 	// Sort the result by descending order base on the _id field
 	latestEntryFilter := bson.D{{"_id", -1}}
-	options := options.FindOne().SetSort(latestEntryFilter)
+	sortOptions := options.FindOne().SetSort(latestEntryFilter)
 
-	queryResult := db.WeatherData.FindOne(context.TODO(), bson.M{}, options)
+	queryResult := db.WeatherData.FindOne(context.TODO(), bson.M{}, sortOptions)
 	err = queryResult.Err()
 	if err != nil {
 		return "", err
