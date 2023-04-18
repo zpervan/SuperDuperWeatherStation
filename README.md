@@ -23,7 +23,7 @@ The server components are wrapped in Docker files which allows to instantly buil
 
 ### Frontend ###
 
-Visualizes the weather data by temperature and humidity on a selected date. The application itself is written in Rust and will be available for desktop and web.
+Visualizes the weather data by temperature and humidity on a selected date. The application itself is written in Rust and is available for desktop.
 ![desktop_app](assets/visualization_app_preview.png)
 
 ## Setup ##

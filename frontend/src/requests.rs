@@ -12,12 +12,12 @@ use std::thread;
 pub const FETCHED_WEATHER_DATA: Selector<ApplicationData> = Selector::new("fetched_weather_data");
 
 // Endpoints
-// @TODO: Check if it's possible to combine the endpoint str's during the init phase
-const BASE_URL: &str = "http://192.168.1.6:3500";
+const BASE_URL: &str = "http://ADD-YOUR-IP:3500";
 const FETCH_WEATHER_DATA_BY_DATE_ENDPOINT: &str = "/get/";
 const FETCH_DATES_ENDPOINT: &str = "/dates";
 const FETCH_LATEST_DATE_ENDPOINT: &str = "/latest";
 
+/// Fetch the weather (temperature and humidity) data from the given server and populate
 pub fn get_weather_data(sink: ExtEventSink, date: String)
 {
     thread::spawn(move || {
@@ -34,9 +34,6 @@ pub fn get_weather_data(sink: ExtEventSink, date: String)
             app_data.temperature.push_back((DurationWrapper(time), value["temperature"].as_f64().unwrap() as f32));
             app_data.humidity.push_back((DurationWrapper(time), value["humidity"].as_f64().unwrap() as f32));
         }
-
-        println!("HEAD Date: {}", app_data.temperature.head().unwrap().0.0);
-        println!("BACK Date: {}", app_data.temperature.back().unwrap().0.0);
 
         sink.submit_command(FETCHED_WEATHER_DATA, app_data, Target::Auto).expect("Failed to submit weather data command");
     });

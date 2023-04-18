@@ -15,7 +15,6 @@ impl Data for DurationWrapper
     }
 }
 
-#[allow(clippy::rc_buffer)]
 #[derive(Clone, Data, Lens)]
 pub struct ApplicationData
 {
@@ -24,7 +23,6 @@ pub struct ApplicationData
     pub current_date: String,
 }
 
-// @TODO: Add a functionality which will only fetch the dates and
 impl ApplicationData
 {
     pub fn new() -> Self
