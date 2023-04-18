@@ -12,7 +12,7 @@ use std::thread;
 pub const FETCHED_WEATHER_DATA: Selector<ApplicationData> = Selector::new("fetched_weather_data");
 
 // Endpoints
-const BASE_URL: &str = "http://ADD-YOUR-IP:3500";
+const BASE_URL: &str = "http://ADD-YOUR-IP:3500"; // CHANGE THIS!
 const FETCH_WEATHER_DATA_BY_DATE_ENDPOINT: &str = "/get/";
 const FETCH_DATES_ENDPOINT: &str = "/dates";
 const FETCH_LATEST_DATE_ENDPOINT: &str = "/latest";

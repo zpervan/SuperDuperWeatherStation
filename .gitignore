@@ -1,6 +1,6 @@
 # Files
 go.sum
-cargo.lock
+Cargo.lock
 *.exe
 *.exe~
 *.dll
