@@ -1,5 +1,7 @@
 # SuperDuperWeatherStation #
 
+[![Ubuntu](https://github.com/zpervan/SuperDuperWeatherStation/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/zpervan/SuperDuperWeatherStation/actions/workflows/ubuntu.yml) [![Windows](https://github.com/zpervan/SuperDuperWeatherStation/actions/workflows/windows.yml/badge.svg)](https://github.com/zpervan/SuperDuperWeatherStation/actions/workflows/windows.yml)
+
 This is a small weather station project which measures the environment temperature and humidity then sends this data to
 a dedicated server and visualized afterwards.
 Currently, it was developed on Windows 11, and works on Ubuntu too but additional libraries need to be installed.
@@ -31,7 +33,7 @@ quickly. Make sure the Docker environment is properly installed in your machine.
 Visualizes the weather data by temperature and humidity on a selected date. The application itself is written in Rust
 and is available for desktop.
 
-![desktop_app](assets/visualization_app_preview.png)
+![desktop_app](.github/assets/visualization_app_preview.png)
 
 ## Setup ##
 
@@ -78,8 +80,7 @@ address, i.e.
 
 ```rust
 // Endpoints
-const BASE_URL: &str = "http://192.168.1.1:3500";
-// Set your server IP address
+const BASE_URL: &str = "http://192.168.1.1:3500"; // Set your server IP address
 const FETCH_WEATHER_DATA_BY_DATE_ENDPOINT: &str = "/get/";
 const FETCH_DATES_ENDPOINT: &str = "/dates";
 const FETCH_LATEST_DATE_ENDPOINT: &str = "/latest";
@@ -89,7 +90,7 @@ Additionally, Ubuntu 22.04 needs the following libraries in order to compile suc
 
 ```shell
 sudo apt-get update
-sudo apt-get install pkg-config libglib2.0-dev libpango1.0-dev libatk1.0-dev libgdk-pixbuf-2.0-dev libssl-dev
+sudo apt-get install pkg-config libgtk-3-dev libglib2.0-dev libpango1.0-dev libatk1.0-dev libgdk-pixbuf-2.0-dev libssl-dev
 ```
 
 This is working out-of-the-box on Windows 11, so no special attention needed there.
@@ -102,13 +103,13 @@ cargo run .
 
 ## Schematic ##
 <p align="center">
-<img src="assets/schematic_weather_station.png" alt="JetBrains Logo" width="635"/>
+<img src=".github/assets/schematic_weather_station.png" alt="JetBrains Logo" width="635"/>
 </p>
 
 ## Smoke test ##
 
 After the weather station is wired as shown in the schematic, turn on the power supply and the ESP01 should begin the
-initialization process by connecting to the provided Wi-Fi data and send the an initial `ping` request to the server.
+initialization process by connecting to the provided Wi-Fi data and send an initial `ping` request to the server.
 
 Make sure you follow the log output of the server by executing the following command:
 
@@ -130,7 +131,7 @@ arrow button** to fetch the data.
 
 Special thanks to JetBrains for providing me with a
 free [open-source](https://www.jetbrains.com/community/opensource/?utm_campaign=opensource&utm_content=approved&utm_medium=email&utm_source=newsletter&utm_term=jblogo#support)
-license in order to create this project.
+license for CLion and Goland in order to create this project.
 <p align="center">
 <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo" width="200"/>
 </p>

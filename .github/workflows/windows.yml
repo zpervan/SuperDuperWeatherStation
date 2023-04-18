@@ -1,0 +1,47 @@
+name: Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "1.20"
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: default
+          toolchain: stable
+          override: true
+
+      - name: Install dependencies
+        run: |
+          choco install -y gtk-runtime
+          choco install -y pkgconfiglite
+
+      - name: Build server
+        run: |
+          cd server
+          go mod tidy
+          go build -o server.exe .
+
+      - name: Build GUI
+        run: |
+          cd frontend
+          cargo build --verbose
