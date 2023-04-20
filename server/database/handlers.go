@@ -134,10 +134,10 @@ func (db *Database) GetByDate(date *string) (queryResult []WeatherData, err erro
 	// A filter criteria which will fetch all data on the passed date
 	// We search between the days which are the day before and after the parsed date and obtain all data
 	// If the $eq (equal) operator was used, it would only return one or none entries which has the given time component (i.e., 00:00:00)
-	dateFilter := bson.M{"created_on": bson.M{
-		"$gt": primitive.NewDateTimeFromTime(parsedDate).Time().AddDate(0, 0, 0),
-		"$lt": primitive.NewDateTimeFromTime(parsedDate).Time().AddDate(0, 0, 1),
-	}}
+	dateFilter := bson.D{{"created_on", bson.D{
+		{"$gt", primitive.NewDateTimeFromTime(parsedDate).Time().AddDate(0, 0, 0)},
+		{"$lt", primitive.NewDateTimeFromTime(parsedDate).Time().AddDate(0, 0, 1)},
+	}}}
 
 	cursor, err := db.WeatherData.Find(context.TODO(), dateFilter)
 	if err != nil {
