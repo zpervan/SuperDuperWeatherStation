@@ -25,7 +25,7 @@ func (r *Routes) HandleRequests() *chi.Mux {
 	//GET
 	router.Get("/ping", r.Handlers.Ping)
 	router.Get("/get", r.Handlers.GetAllWeatherData)
-	router.Get("/get/{date:^[0-9]+$}", r.Handlers.GetByDate)
+	router.Get("/get/{date:^[0-9]{8}$}", r.Handlers.GetByDate)
 	router.Get("/dates", r.Handlers.GetDates)
 	router.Get("/dates/latest", r.Handlers.GetLatestDate)
 
