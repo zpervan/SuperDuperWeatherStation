@@ -78,8 +78,7 @@ address, i.e.
 
 ```rust
 // Endpoints
-const BASE_URL: &str = "http://192.168.1.1:3500";
-// Set your server IP address
+const BASE_URL: &str = "http://192.168.1.1:3500"; // Set YOUR server IP address
 const FETCH_WEATHER_DATA_BY_DATE_ENDPOINT: &str = "/get/";
 const FETCH_DATES_ENDPOINT: &str = "/dates";
 const FETCH_LATEST_DATE_ENDPOINT: &str = "/latest";
